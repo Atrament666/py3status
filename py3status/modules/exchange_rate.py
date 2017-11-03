@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Display foreign exchange rates.
-
-The exchange rate data comes from Yahoo Finance.
-
-For a list of three letter currency codes please see
-https://en.wikipedia.org/wiki/ISO_4217 NOTE: Not all listed currencies may be
-available
+Display foreign exchange rates using fixer.io API.
 
 Configuration parameters:
     base: Base currency used for exchange rates (default 'EUR')
@@ -16,16 +10,14 @@ Configuration parameters:
         will be replaced by the current exchange rate.
         (default '${USD} £{GBP} ¥{JPY}')
 
-@author tobes
+@author Atrament
 @license BSD
 
 SAMPLE OUTPUT
 {'full_text': u'$1.0617 \xa30.8841 \xa5121.5380'}
 """
 
-URL = 'http://query.yahooapis.com/v1/public/yql?'
-URL += 'q=select * from yahoo.finance.xchange where pair in ({currencies})'
-URL += '&env=store://datatables.org/alltableswithkeys&format=json'
+URL='http://api.fixer.io/latest?base'
 
 
 class Py3status:
@@ -41,7 +33,7 @@ class Py3status:
         self.currencies = self.py3.get_placeholders_list(self.format)
         # create url
         currencies = ['"%s%s"' % (self.base, cur) for cur in self.currencies]
-        self.data_url = URL.format(currencies=','.join(currencies))
+        self.data_url = URL + self.base
         # cache for rates data as sometimes we do not receive valid data
         self.rates_data = {currency: '?' for currency in self.currencies}
 
@@ -54,16 +46,12 @@ class Py3status:
         if result:
             data = result.json()
             try:
-                rates = data['query']['results']['rate']
+                rates = data['rates']
             except (KeyError, TypeError):
                 pass
 
-        # Single currency is not passed as a 1 element list
-        if isinstance(rates, list):
-            for rate in rates:
-                self.rates_data[rate['id'][3:]] = rate['Rate']
-        else:
-            self.rates_data[rates['id'][3:]] = rates['Rate']
+        for rate in self.rates_data:
+            self.rates_data[rate] = rates[rate]
 
         return {
             'full_text': self.py3.safe_format(self.format, self.rates_data),
