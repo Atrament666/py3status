@@ -17,7 +17,7 @@ SAMPLE OUTPUT
 {'full_text': u'$1.0617 \xa30.8841 \xa5121.5380'}
 """
 
-URL='http://api.fixer.io/latest?base'
+URL='http://api.fixer.io/latest?base='
 
 
 class Py3status:
